@@ -11,13 +11,14 @@ const saltRounds = Number(process.env.SALT_ROUNDS);
 
 app.use(bodyParser.json());
 app.use(cors()); // CORS 미들웨어 사용
+app.set("trust proxy", true);
 
 // Helper function to convert Buffer to string safely
 const convertBufferToString = (buffer) => {
-  if (buffer && buffer.data) {
-    return Buffer.from(buffer.data).toString("utf8");
+  if (buffer && Buffer.isBuffer(buffer)) {
+    return buffer.toString("utf8");
   }
-  return ""; // Return an empty string if buffer is undefined or empty
+  return ""; // Return an empty string if buffer is undefined or not a Buffer
 };
 
 // Create a message
