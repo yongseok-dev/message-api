@@ -12,9 +12,12 @@ const saltRounds = Number(process.env.SALT_ROUNDS);
 app.use(bodyParser.json());
 app.use(cors()); // CORS 미들웨어 사용
 
-// Helper function to convert Buffer to string
+// Helper function to convert Buffer to string safely
 const convertBufferToString = (buffer) => {
-  return Buffer.from(buffer).toString("utf8");
+  if (buffer && buffer.data) {
+    return Buffer.from(buffer.data).toString("utf8");
+  }
+  return ""; // Return an empty string if buffer is undefined or empty
 };
 
 // Create a message
@@ -41,9 +44,9 @@ app.get("/messages", async (req, res) => {
     );
     const readableMessages = rows.map((row) => ({
       id: row.id,
-      name: convertBufferToString(row.name.data),
-      message: convertBufferToString(row.message.data),
-      author_ip: convertBufferToString(row.author_ip.data),
+      name: convertBufferToString(row.name),
+      message: convertBufferToString(row.message),
+      author_ip: convertBufferToString(row.author_ip),
       created_at: row.created_at,
     }));
     res.status(200).json(readableMessages);
