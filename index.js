@@ -12,6 +12,11 @@ const saltRounds = Number(process.env.SALT_ROUNDS);
 app.use(bodyParser.json());
 app.use(cors()); // CORS 미들웨어 사용
 
+// Helper function to convert Buffer to string
+const convertBufferToString = (buffer) => {
+  return Buffer.from(buffer).toString("utf8");
+};
+
 // Create a message
 app.post("/messages", async (req, res) => {
   const { name, password, message } = req.body;
@@ -34,25 +39,14 @@ app.get("/messages", async (req, res) => {
     const [rows] = await db.execute(
       "SELECT * FROM Messages WHERE deleted_at IS NULL"
     );
-    res.status(200).json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Read a single message by id
-app.get("/messages/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const [rows] = await db.execute(
-      "SELECT * FROM Messages WHERE id = ? AND deleted_at IS NULL",
-      [id]
-    );
-    if (rows.length === 0) {
-      res.status(404).json({ error: "Message not found" });
-    } else {
-      res.status(200).json(rows[0]);
-    }
+    const readableMessages = rows.map((row) => ({
+      id: row.id,
+      name: convertBufferToString(row.name.data),
+      message: convertBufferToString(row.message.data),
+      author_ip: convertBufferToString(row.author_ip.data),
+      created_at: row.created_at,
+    }));
+    res.status(200).json(readableMessages);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
